@@ -10,13 +10,20 @@ facts = {
 }
 
 rules = [
-    ("likes_maths and likes_science", "Engineer"),
-    ("likes_helping_people and likes_children", "Teacher"),
-    ("likes_discipline and not dislikes_blood", "Policeman"),
-    ("likes_law", "Lawyer"),
-    ("likes_science and not dislikes_blood", "Doctor")
+    {"if": "likes_maths and likes_science", "then": "is_engineer"},
+    {"if": "likes_helping_people and likes_children", "then": "is_teacher"},
+    {"if": "likes_discipline and not dislikes_blood", "then": "is_policeman"},
+    {"if": "likes_law", "then": "is_lawyer"},
+    {"if": "likes_science and not dislikes_blood", "then": "is_doctor"}
 ]
 
+recommendation_map = {
+    "is_engineer": "Engineer",
+    "is_teacher": "Teacher",
+    "is_policeman": "Policeman",
+    "is_lawyer": "Lawyer",
+    "is_doctor": "Doctor",
+}
 
 # --- Interactive input helpers ---
 def ask_bool(prompt: str) -> bool:
@@ -36,14 +43,43 @@ def collect_facts() -> dict:
     return f
 
 
-# --- Minimal inference ---
+# --- Simple Forward Chaining ---
 
-def infer(facts: dict, rules):
-    results = []
-    for condition, profession in rules:
-        if eval(condition, {}, facts):
-            results.append(profession)
-    return results
+def forward_chain(initial_facts: dict, rules: list[dict[str, str]]):
+    """
+    Repeatedly apply rules of the form {"if": <expr>, "then": <symbol>}.
+    When a rule's condition is true under the current facts, assert its consequent
+    as True in the fact base. Continue until no new facts are derived.
+    Returns: (final_facts, newly_derived_keys)
+    """
+    facts = dict(initial_facts)  # work on a copy
+    derived: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for rule in rules:
+            condition = rule["if"]
+            consequent = rule["then"]
+            # If we already know the consequent is true, skip
+            if facts.get(consequent) is True:
+                continue
+            # Evaluate the rule's condition in the context of current facts
+            if eval(condition, {}, facts):
+                facts[consequent] = True
+                derived.add(consequent)
+                changed = True
+    return facts, derived
+
+
+def collect_recommendations(facts: dict, derived: set[str]) -> list[str]:
+    """Turn derived proposition symbols into human-readable recommendations."""
+    recs = []
+    for sym in derived:
+        label = recommendation_map.get(sym)
+        if label:
+            recs.append(label)
+    # Sort alphabetically for deterministic output
+    return sorted(recs)
 
 
 # --- Entry point ---
@@ -55,7 +91,9 @@ if __name__ == "__main__":
     else:
         user_facts = facts  # use the defaults declared at the top
 
-    recommendations = infer(user_facts, rules)
-    print("\nFacts:", user_facts)
-    print("Recommendations:", recommendations or ["(none matched yet)"])
+    final_facts, derived = forward_chain(user_facts, rules)
+    recommendations = collect_recommendations(final_facts, derived)
 
+    print("\nFacts:", final_facts)
+    print("Derived facts:", sorted(list(derived)) or ["(none)"])
+    print("Recommendations:", recommendations or ["(none matched yet)"])

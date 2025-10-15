@@ -1,6 +1,6 @@
 # streamlit_app.py
 import streamlit as st
-from CareerAdvisor import rules, infer  # reuses your rules + infer
+from CareerAdvisor import rules, forward_chain, collect_recommendations
 
 st.set_page_config(page_title="Career Advisor", layout="centered")
 
@@ -14,16 +14,22 @@ facts = {
     "likes_creativity":     st.checkbox("I enjoy creative work."),
     "likes_law":            st.checkbox("I'm interested in law.", value=True),
     "likes_science":        st.checkbox("I like science."),
-    "likes_discipline":     st.checkbox("I value discipline and structure.", value=True),
+    "likes_discipline":     st.checkbox("I value discipline and structure."),
     "dislikes_blood":       st.checkbox("I dislike seeing blood."),
     "likes_children":       st.checkbox("I like working with children.", value=True),
 }
 
 if st.button("Recommend"):
-    recs = infer(facts, rules)
+    final_facts, derived = forward_chain(facts, rules)
+    recs = collect_recommendations(final_facts, derived)
     if recs:
         st.success("Recommendations:")
         for r in recs:
             st.write(f"- **{r}**")
     else:
         st.warning("No matches yet. Try different options.")
+
+    with st.expander("Details"):
+        st.write("**Derived facts:**", sorted(list(derived)) or ["(none)"])
+        st.write("**Facts used:")
+        st.json(final_facts)
