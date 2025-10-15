@@ -6,23 +6,55 @@ facts = {
     "likes_science": False,
     "likes_discipline": True,
     "dislikes_blood": False,
-    "likes_children": True
+    "likes_children": True,
+    "good_communication": False,
+    "likes_technology": True,
+    "likes_problem_solving": True,
+    "prefers_teamwork": False,
+    "likes_outdoors": True,
+    "likes_research": False,
+    "high_attention_detail": True,
+    "likes_leadership": False
 }
 
 rules = [
-    {"if": "likes_maths and likes_science", "then": "is_engineer"},
-    {"if": "likes_helping_people and likes_children", "then": "is_teacher"},
-    {"if": "likes_discipline and not dislikes_blood", "then": "is_policeman"},
-    {"if": "likes_law", "then": "is_lawyer"},
-    {"if": "likes_science and not dislikes_blood", "then": "is_doctor"}
+    # Engineering path: math AND (science OR technology) AND problem_solving AND NOT(prefers_teamwork)
+    {"if": "(likes_maths and (likes_science or likes_technology) and likes_problem_solving and not prefers_teamwork)", 
+     "then": "is_engineer"},
+    
+    # Teaching path: (children OR helping_people) AND good_communication
+    {"if": "((likes_children or likes_helping_people) and good_communication)", 
+     "then": "is_teacher"},
+    
+    # Police path: (discipline AND helping_people) OR (outdoors AND leadership)
+    {"if": "((likes_discipline and likes_helping_people) or (likes_outdoors and likes_leadership))", 
+     "then": "is_policeman"},
+    
+    # Law path: law AND (high_attention_detail OR likes_problem_solving) AND NOT(likes_creativity)
+    {"if": "(likes_law and (high_attention_detail or likes_problem_solving) and not likes_creativity)", 
+     "then": "is_lawyer"},
+    
+    # Medical path: (science AND NOT(dislikes_blood)) OR (helping_people AND high_attention_detail)
+    {"if": "((likes_science and not dislikes_blood) or (likes_helping_people and high_attention_detail))", 
+     "then": "is_doctor"},
+    
+    # Research path: (science OR likes_research) AND high_attention_detail
+    {"if": "((likes_science or likes_research) and high_attention_detail)", 
+     "then": "is_researcher"},
+    
+    # IT path: technology AND (problem_solving OR maths) AND NOT(prefers_teamwork)
+    {"if": "(likes_technology and (likes_problem_solving or likes_maths) and not prefers_teamwork)", 
+     "then": "is_it_specialist"}
 ]
 
 recommendation_map = {
-    "is_engineer": "Engineer",
-    "is_teacher": "Teacher",
-    "is_policeman": "Policeman",
-    "is_lawyer": "Lawyer",
-    "is_doctor": "Doctor",
+    "is_engineer": "Engineer - Ideal for analytical problem-solvers who enjoy technical work",
+    "is_teacher": "Teacher - Perfect for those who excel in communication and knowledge sharing",
+    "is_policeman": "Police Officer - Suited for disciplined individuals who want to serve society",
+    "is_lawyer": "Lawyer - Excellent for detail-oriented problem solvers interested in justice",
+    "is_doctor": "Doctor - Great for those who combine scientific interest with caring for others",
+    "is_researcher": "Researcher - Ideal for detail-oriented individuals who love discovery",
+    "is_it_specialist": "IT Specialist - Perfect for tech-savvy independent problem solvers"
 }
 
 # --- Interactive input helpers ---
@@ -40,6 +72,14 @@ def collect_facts() -> dict:
     f["likes_discipline"] = ask_bool("Do you value discipline and structure?")
     f["dislikes_blood"] = ask_bool("Do you dislike seeing blood?")
     f["likes_children"] = ask_bool("Do you like working with children?")
+    f["good_communication"] = ask_bool("Are you good at communication?")
+    f["likes_technology"] = ask_bool("Do you enjoy working with technology?")
+    f["likes_problem_solving"] = ask_bool("Do you enjoy solving complex problems?")
+    f["prefers_teamwork"] = ask_bool("Do you prefer working in teams?")
+    f["likes_outdoors"] = ask_bool("Do you enjoy outdoor activities?")
+    f["likes_research"] = ask_bool("Do you enjoy conducting research?")
+    f["high_attention_detail"] = ask_bool("Do you have high attention to detail?")
+    f["likes_leadership"] = ask_bool("Do you enjoy taking leadership roles?")
     return f
 
 
