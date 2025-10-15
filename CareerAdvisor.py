@@ -23,27 +23,27 @@ rules = [
      "then": "is_engineer"},
     
     # Teaching path: (children OR helping_people) AND good_communication
-    {"if": "(likes_children or likes_helping_people) and good_communication", 
+    {"if": "((likes_children or likes_helping_people) and good_communication)", 
      "then": "is_teacher"},
     
     # Police path: (discipline AND helping_people) OR (outdoors AND leadership)
-    {"if": "(likes_discipline and likes_helping_people) or (likes_outdoors and likes_leadership)", 
+    {"if": "((likes_discipline and likes_helping_people) or (likes_outdoors and likes_leadership))", 
      "then": "is_policeman"},
     
     # Law path: law AND (high_attention_detail OR likes_problem_solving) AND NOT(likes_creativity)
-    {"if": "likes_law and (high_attention_detail or likes_problem_solving) and not likes_creativity", 
+    {"if": "(likes_law and (high_attention_detail or likes_problem_solving) and not likes_creativity)", 
      "then": "is_lawyer"},
     
     # Medical path: (science AND NOT(dislikes_blood)) OR (helping_people AND high_attention_detail)
-    {"if": "(likes_science and not dislikes_blood) or (likes_helping_people and high_attention_detail)", 
+    {"if": "((likes_science and not dislikes_blood) or (likes_helping_people and high_attention_detail))", 
      "then": "is_doctor"},
     
     # Research path: (science OR likes_research) AND high_attention_detail
-    {"if": "(likes_science or likes_research) and high_attention_detail", 
+    {"if": "((likes_science or likes_research) and high_attention_detail)", 
      "then": "is_researcher"},
     
     # IT path: technology AND (problem_solving OR maths) AND NOT(prefers_teamwork)
-    {"if": "likes_technology and (likes_problem_solving or likes_maths) and not prefers_teamwork", 
+    {"if": "(likes_technology and (likes_problem_solving or likes_maths) and not prefers_teamwork)", 
      "then": "is_it_specialist"}
 ]
 
