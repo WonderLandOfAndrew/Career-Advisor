@@ -1,25 +1,25 @@
 facts = {
-    "likes_helping_people": True,
+    "likes_helping_people": False,
     "likes_maths": False,
     "likes_creativity": False,
-    "likes_law": True,
+    "likes_law": False,
     "likes_science": False,
-    "likes_discipline": True,
+    "likes_discipline": False,
     "dislikes_blood": False,
-    "likes_children": True,
+    "likes_children": False,
     "good_communication": False,
-    "likes_technology": True,
-    "likes_problem_solving": True,
+    "likes_technology": False,
+    "likes_problem_solving": False,
     "prefers_teamwork": False,
-    "likes_outdoors": True,
+    "likes_outdoors": False,
     "likes_research": False,
-    "high_attention_detail": True,
+    "high_attention_detail": False,
     "likes_leadership": False
 }
 
 rules = [
-    # Engineering path: math AND (science OR technology) AND problem_solving AND NOT(prefers_teamwork)
-    {"if": "(likes_maths and (likes_science or likes_technology) and likes_problem_solving and not prefers_teamwork)", 
+    # Engineering path: math AND (science OR technology) AND problem_solving
+    {"if": "(likes_maths and (likes_science or likes_technology) and likes_problem_solving)",
      "then": "is_engineer"},
     
     # Teaching path: (children OR helping_people) AND good_communication
