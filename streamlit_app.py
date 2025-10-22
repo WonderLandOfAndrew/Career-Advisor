@@ -1,4 +1,7 @@
 # streamlit_app.py
+import ast
+from functools import lru_cache
+
 import streamlit as st
 from CareerAdvisor import rules, forward_chain, collect_recommendations
 import plotly.graph_objects as go
@@ -104,6 +107,42 @@ def plot_preference_map(x_score, y_score):
     )
     return fig
 
+@lru_cache(maxsize=None)
+def parse_rule_clauses(condition: str):
+    """Return list of conjunctions (clauses) from a rule condition."""
+    expr = ast.parse(condition, mode="eval")
+
+    def clause_list(node):
+        if isinstance(node, ast.BoolOp):
+            if isinstance(node.op, ast.And):
+                clauses = [[]]
+                for value in node.values:
+                    sub_clauses = clause_list(value)
+                    new_clauses = []
+                    for base in clauses:
+                        for sub in sub_clauses:
+                            new_clauses.append(base + sub)
+                    clauses = new_clauses
+                return clauses
+            elif isinstance(node.op, ast.Or):
+                clauses = []
+                for value in node.values:
+                    clauses.extend(clause_list(value))
+                return clauses
+            else:
+                raise ValueError(f"Unsupported boolean operator: {ast.dump(node.op)}")
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            if isinstance(node.operand, ast.Name):
+                return [[(node.operand.id, False)]]
+            raise ValueError("Negation is only supported for simple fact names.")
+        if isinstance(node, ast.Name):
+            return [[(node.id, True)]]
+        if isinstance(node, ast.Constant):
+            return [[("__const__", bool(node.value))]]
+        raise ValueError(f"Unsupported expression in rule: {ast.dump(node)}")
+
+    return clause_list(expr.body)
+
 def plot_career_matches(final_facts, derived):
     matches = {}
     for rule in rules:
@@ -125,11 +164,25 @@ def plot_career_matches(final_facts, derived):
                 position_score = max(0, 100 - distance)
                 trait_scores.append(position_score)
             
-            # Rule match score
-            rule_conditions = rule["if"].count('and') + 1  # Count conditions
-            met_conditions = sum(1 for trait, value in final_facts.items() if value and trait in rule["if"])
-            rule_score = (met_conditions / rule_conditions) * 100
-            trait_scores.append(rule_score)
+            # Rule match score based on best-satisfied clause in the condition
+            clauses = parse_rule_clauses(rule["if"])
+            clause_scores = []
+            for clause in clauses:
+                expected = {}
+                for name, value in clause:
+                    if name == "__const__":
+                        continue
+                    expected[name] = value
+                if not expected:
+                    continue
+                satisfied = sum(
+                    1
+                    for name, value in expected.items()
+                    if final_facts.get(name, False) == value
+                )
+                clause_scores.append((satisfied / len(expected)) * 100)
+            if clause_scores:
+                trait_scores.append(max(clause_scores))
             
             # Calculate final score as average
             matches[career_name] = sum(trait_scores) / len(trait_scores)
