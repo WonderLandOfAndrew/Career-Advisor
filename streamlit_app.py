@@ -12,14 +12,14 @@ st.write("Tick the statements that are true for you, then click **Recommend**.")
 
 # Build the facts from checkboxes (names MUST match your rules)
 facts = {
-    "likes_helping_people"  : st.checkbox("I like helping people.", value=True),
+    "likes_helping_people"  : st.checkbox("I like helping people."),
     "likes_maths"           : st.checkbox("I like maths."),
     "likes_creativity"      : st.checkbox("I enjoy creative work."),
-    "likes_law"             : st.checkbox("I'm interested in law.", value=True),   
+    "likes_law"             : st.checkbox("I'm interested in law."),   
     "likes_science"         : st.checkbox("I like science."),
     "likes_discipline"      : st.checkbox("I value discipline and structure."),
     "dislikes_blood"        : st.checkbox("I dislike seeing blood."),
-    "likes_children"        : st.checkbox("I like working with children.", value=True),
+    "likes_children"        : st.checkbox("I like working with children."),
     
     "good_communication"    : st.checkbox("I am a good communicator."),
     "likes_technology"      : st.checkbox("I like technology."),
@@ -43,7 +43,7 @@ CAREER_POSITIONS = {
     'IT Specialist': {'analytical': 85, 'social': 35}
 }
 
-def calculate_xy_scores(facts):
+def calculate_xy_scores(facts): # positions your score on the table
     # X-axis: Analytical score
     analytical_traits = ['likes_maths', 'likes_science', 'likes_technology', 
                         'likes_problem_solving', 'high_attention_detail', 'likes_research']
