@@ -3,7 +3,7 @@ import ast
 from functools import lru_cache
 
 import streamlit as st
-from CareerAdvisor import rules, forward_chain, collect_recommendations
+from CareerAdvisor import rules, forward_chain, collect_recommendations, recommendation_map
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
@@ -220,9 +220,59 @@ if st.button("Recommend"):
     st.plotly_chart(plot_preference_map(x_score, y_score))
     
     if recs:
-        st.success("Recommendations:")
-        for r in recs:
-            st.write(f"- **{r}**")
+        # Get the ordered matches first
+        matches = {}
+        for rule in rules:
+            career = rule["then"]
+            career_name = career.replace('is_', '').title()
+            
+            if career in derived:
+                # Calculate match percentage based on multiple factors
+                trait_scores = []
+                
+                # Position match score
+                if career_name in CAREER_POSITIONS:
+                    x_score, y_score = calculate_xy_scores(final_facts)
+                    ideal_pos = CAREER_POSITIONS[career_name]
+                    distance = np.sqrt(
+                        (x_score - ideal_pos['analytical'])**2 + 
+                        (y_score - ideal_pos['social'])**2
+                    )
+                    position_score = max(0, 100 - distance)
+                    trait_scores.append(position_score)
+                
+                # Rule match score
+                clauses = parse_rule_clauses(rule["if"])
+                clause_scores = []
+                for clause in clauses:
+                    expected = {}
+                    for name, value in clause:
+                        if name == "__const__":
+                            continue
+                        expected[name] = value
+                    if not expected:
+                        continue
+                    satisfied = sum(
+                        1
+                        for name, value in expected.items()
+                        if final_facts.get(name, False) == value
+                    )
+                    clause_scores.append((satisfied / len(expected)) * 100)
+                if clause_scores:
+                    trait_scores.append(max(clause_scores))
+                
+                matches[career_name] = sum(trait_scores) / len(trait_scores)
+        
+        # Sort matches by score
+        sorted_matches = dict(sorted(matches.items(), key=lambda x: x[1], reverse=True))
+        
+        st.success("Recommendations (sorted by match percentage):")
+        for career_name in sorted_matches.keys():
+            # Find the corresponding recommendation text
+            career_key = f"is_{career_name.lower().replace(' ', '_')}"
+            rec = recommendation_map.get(career_key)
+            if rec:
+                st.write(f"- **{rec}**")
         
         # Plot career matches
         match_chart = plot_career_matches(final_facts, derived)
