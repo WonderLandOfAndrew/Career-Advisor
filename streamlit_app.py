@@ -282,6 +282,63 @@ if st.button("Recommend"):
         st.warning("No matches yet. Try different options.")
 
     with st.expander("Details"):
-        st.write("**Derived facts:**", sorted(list(derived)) or ["(none)"])
+        # Get matches with percentages
+        matches = {}
+        for rule in rules:
+            career = rule["then"]
+            career_name = career.replace('is_', '').title()
+            
+            if career in derived:
+                # Calculate match percentage
+                trait_scores = []
+                
+                # Position match score
+                if career_name in CAREER_POSITIONS:
+                    x_score, y_score = calculate_xy_scores(final_facts)
+                    ideal_pos = CAREER_POSITIONS[career_name]
+                    distance = np.sqrt(
+                        (x_score - ideal_pos['analytical'])**2 + 
+                        (y_score - ideal_pos['social'])**2
+                    )
+                    position_score = max(0, 100 - distance)
+                    trait_scores.append(position_score)
+                
+                # Rule match score
+                clauses = parse_rule_clauses(rule["if"])
+                clause_scores = []
+                for clause in clauses:
+                    expected = {}
+                    for name, value in clause:
+                        if name == "__const__":
+                            continue
+                        expected[name] = value
+                    if not expected:
+                        continue
+                    satisfied = sum(
+                        1 for name, value in expected.items()
+                        if final_facts.get(name, False) == value
+                    )
+                    clause_scores.append((satisfied / len(expected)) * 100)
+                if clause_scores:
+                    trait_scores.append(max(clause_scores))
+                
+                matches[f"is_{career_name.lower()}"] = sum(trait_scores) / len(trait_scores)
+        
+        # Sort career facts by match percentage
+        career_facts = [fact for fact in derived if fact.startswith('is_')]
+        career_facts.sort(key=lambda x: matches.get(x, 0), reverse=True)
+        
+        # Get other facts sorted alphabetically
+        other_facts = sorted([fact for fact in derived if not fact.startswith('is_')])
+
+        # Display sorted facts with percentages
+        st.write("**Derived career matches:**")
+        if career_facts:
+            matches_json = {fact.replace('is_', '').title(): f"{matches.get(fact, 0):.1f}%" 
+                          for fact in career_facts}
+            st.json(matches_json)
+        else:
+            st.write("(none)")
+            
         st.write("**Facts used:**")
         st.json(final_facts)
